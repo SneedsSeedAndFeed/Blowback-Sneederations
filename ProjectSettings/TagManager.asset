@@ -41,3 +41,12 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Below Ground
+    uniqueID: 3722670215
+    locked: 0
+  - name: Ground
+    uniqueID: 2859651561
+    locked: 0
+  - name: highlight
+    uniqueID: 291196539
+    locked: 0
