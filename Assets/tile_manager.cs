@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using UnityEngine.UIElements;
+using System.Linq;
 
 public class tile_manager : MonoBehaviour
 {
     private Grid grid;
     [SerializeField] private Tilemap interactiveMap = null;
     [SerializeField] private Tilemap groundMap = null;
+    [SerializeField] private Tilemap brushMap = null;
+    [SerializeField] private Tilemap impassibleMap = null;
     [SerializeField] private Tilemap playerMap = null;
     [SerializeField] private Tile hoverTile = null;
     [SerializeField] private Tile selectedTile = null;
@@ -19,22 +22,109 @@ public class tile_manager : MonoBehaviour
     private Vector3Int playerPos = new Vector3Int();
 
     private bool characterselected = false;
-
+    
     void x_tile_picker(Vector3Int mousePos, int range, float tilesize, Tile tile, float min, float max, float y)
     {
         for (float x = min; x <= max; x += tilesize)
         {
             Vector3 vector3pos = new Vector3(mousePos.x + x, mousePos.y + y, 0);
-            interactiveMap.SetTile(Vector3Int.RoundToInt(vector3pos), tile);
+            if (!impassibleMap.GetTile(Vector3Int.RoundToInt(vector3pos)))
+            {
+                interactiveMap.SetTile(Vector3Int.RoundToInt(vector3pos), tile);
+            }
+        }
+    }
+
+    List<Vector3Int> x_tile_picker(List<Vector3Int> new_highlighted_tiles,Vector3Int highlight_pos, Tile tile, int min, int max, int y)
+    {
+        for (int x = min; x <= max; x ++)
+        {
+            Vector3Int new_highlight_pos = new Vector3Int(highlight_pos.x + x, highlight_pos.y + y, 0);
+            if (!impassibleMap.GetTile(new_highlight_pos))
+            {
+                interactiveMap.SetTile(new_highlight_pos, tile);
+                new_highlighted_tiles.Add(new_highlight_pos);
+            }
+        }
+        return new_highlighted_tiles;
+    }
+
+
+
+    void highlight_tile_in_range_without_obstacle(Vector3Int mousePos, int range, float tilesize, Tile tile)
+    {
+        for (float y = -tilesize * range; y <= tilesize * range; y += tilesize)
+        {
+            print(y);
+            if (mousePos.y % 2 == 0)
+            {
+                if ((y) / tilesize % 2 == 0)
+                {
+                    x_tile_picker(mousePos, range, tilesize, tile, -range + Mathf.Abs(y / 2), range - Mathf.Abs(y / 2), y);
+                }
+                else
+                {
+                    x_tile_picker(mousePos, range, tilesize, tile, -range + (Mathf.Abs(y) - 1) / 2, range - (Mathf.Abs(y) + 1) / 2, y);
+                }
+            }
+            else
+            {
+                if ((y) / tilesize % 2 == 0)
+                {
+                    x_tile_picker(mousePos, range, tilesize, tile, -range + Mathf.Abs(y / 2), range - Mathf.Abs(y / 2), y);
+                }
+                else
+                {
+                    x_tile_picker(mousePos, range, tilesize, tile, -range + (Mathf.Abs(y) - 1) / 2 + tilesize, range - (Mathf.Abs(y) + 1) / 2 + tilesize, y);
+                }
+            }
         }
     }
 
     void highlight_tile_in_range(Vector3Int mousePos, int range, float tilesize, Tile tile)
     {
-       
-        Vector3Int[] tilelist = new Vector3Int[5];
-        
 
+        List<Vector3Int> highlighted_tiles = new List<Vector3Int>();
+        highlighted_tiles.Add(mousePos);
+        /*for (int y = -1; y <= 1; y++)
+        {
+            if(y % 2 == 0)
+            {
+                for(int x = -1; x <= 1; x++)
+                {
+                    Vector3Int highlight_pos = new Vector3Int(mousePos.x + x, mousePos.y + y, 0);
+                    if (!impassibleMap.GetTile(highlight_pos))
+                    {
+                        interactiveMap.SetTile(highlight_pos, tile);
+                        highlighted_tiles.Add(highlight_pos);
+                    }
+                }
+            }
+        }*/
+        for(int i = 0; i < range; i++)
+        {
+            List<Vector3Int> new_highlighted_tiles = new List<Vector3Int>();
+            foreach (Vector3Int highlight_pos in highlighted_tiles)
+            {
+                for (int y = -1; y <= 1; y++)
+                {
+                    if (y % 2 == 0)
+                    {
+                        new_highlighted_tiles = x_tile_picker(new_highlighted_tiles,highlight_pos, tile, -1, 1, y);
+                    }
+                    else if(highlight_pos.y % 2 != 0)
+                    {
+                        new_highlighted_tiles = x_tile_picker(new_highlighted_tiles, highlight_pos, tile, 0, 1, y);
+                    }
+                    else
+                    {
+                        new_highlighted_tiles = x_tile_picker(new_highlighted_tiles, highlight_pos, tile, -1, 0, y);
+                    }
+                }
+            }
+            highlighted_tiles = highlighted_tiles.Concat(new_highlighted_tiles).ToList();
+        }
+        /*
         for (float y = -tilesize*range; y <= tilesize*range; y+= tilesize)
         {
             print(y);
@@ -53,26 +143,18 @@ public class tile_manager : MonoBehaviour
             {
                 if ((y) / tilesize % 2 == 0)
                 {
-                    for (float x = -range + Mathf.Abs(y / 2); x <= range - Mathf.Abs(y / 2); x += tilesize)
-                    {
-                        Vector3 vector3pos = new Vector3(mousePos.x + x, mousePos.y + y, 0);
-                        interactiveMap.SetTile(Vector3Int.RoundToInt(vector3pos), tile);
-                    }
+                    x_tile_picker(mousePos, range, tilesize, tile, -range + Mathf.Abs(y / 2), range - Mathf.Abs(y / 2), y);
                 }
                 else
                 {
-                    for (float x = -range + (Mathf.Abs(y) - 1) / 2  +tilesize; x <= range - (Mathf.Abs(y) + 1) / 2 + tilesize; x += tilesize)
-                    {
-                        Vector3 vector3pos = new Vector3(mousePos.x + x, mousePos.y + y, 0);
-                        interactiveMap.SetTile(Vector3Int.RoundToInt(vector3pos), tile);
-                    }
+                    x_tile_picker(mousePos, range, tilesize, tile, -range + (Mathf.Abs(y) - 1) / 2 + tilesize, range - (Mathf.Abs(y) + 1) / 2 + tilesize, y);
                 }
             }
         //print(mousePos.x + Mathf.Cos(60 * i));
         //Vector3 vector3pos = new Vector3(mousePos.x + Mathf.Cos(Mathf.PI/3 * i), mousePos.y + Mathf.Sin(Mathf.PI/3 * i), 0);
         //tilelist[i] = Vector3Int.RoundToInt(vector3pos);
         //interactiveMap.SetTile(Vector3Int.RoundToInt(vector3pos), hoverTile);
-        }
+        }*/
             
     }
 
@@ -120,7 +202,7 @@ public class tile_manager : MonoBehaviour
                     {
                         characterselected = false;
                     }
-                    highlight_tile_in_range(mousePos, 40, 1f, null);
+                    highlight_tile_in_range_without_obstacle(mousePos, 40, 1f, null);
 
                 }
             }

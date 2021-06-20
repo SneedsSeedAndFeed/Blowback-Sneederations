@@ -50,6 +50,9 @@ TagManager:
   - name: highlight
     uniqueID: 291196539
     locked: 0
+  - name: tall_impassable
+    uniqueID: 3151710925
+    locked: 0
   - name: character
     uniqueID: 2372318695
     locked: 0
