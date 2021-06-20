@@ -28,18 +28,18 @@ public class camera_controller : MonoBehaviour
         myCamera.fieldOfView += zoomSpeed * Input.GetAxis("Mouse ScrollWheel");//the fov and orthographicsize(basically the zoom of the camera) are changed with scroll wheel
         myCamera.orthographicSize += zoomSpeed * Input.GetAxis("Mouse ScrollWheel");
 
-        myCamera.orthographicSize = Mathf.Clamp(myCamera.orthographicSize, 4, 12);
+        myCamera.orthographicSize = Mathf.Clamp(myCamera.orthographicSize, 4, 8);
         //maximum and minimum zoom
 
         float xpos = transform.position.x;
         float ypos = transform.position.y;
 
-        xpos = Mathf.Clamp(xpos, -25 + myCamera.orthographicSize + 1.1f * (myCamera.orthographicSize - 5),
-            29 - myCamera.orthographicSize - 1.1f * (myCamera.orthographicSize - 5));
+        xpos = Mathf.Clamp(xpos, -35 + myCamera.orthographicSize + 1.1f * (myCamera.orthographicSize - 5),
+            39 - myCamera.orthographicSize - 1.1f * (myCamera.orthographicSize - 5));
 
        
-        ypos = Mathf.Clamp(ypos, -28 + myCamera.orthographicSize,
-            20 - myCamera.orthographicSize);
+        ypos = Mathf.Clamp(ypos, -38 + myCamera.orthographicSize,
+            30 - myCamera.orthographicSize);
 
         //these two are to stop the camera from moving outside the area of the map, not made for random maps yet,
         //however it looks complicated, this is because it is made such that zooming wont change the amount you can see outside the map
