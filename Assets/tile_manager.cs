@@ -8,7 +8,7 @@ using System.Linq;
 public class tile_manager : MonoBehaviour
 {
     private Grid grid;
-    [SerializeField] private Tilemap interactiveMap = null;
+    [SerializeField] private Tilemap highlightMap = null;
     [SerializeField] private Tilemap groundMap = null;
     [SerializeField] private Tilemap brushMap = null;
     [SerializeField] private Tilemap impassibleMap = null;
@@ -19,9 +19,12 @@ public class tile_manager : MonoBehaviour
 
 
     private Vector3Int previousMousePos = new Vector3Int();
+    private Vector3Int pastPlayerPos = new Vector3Int();
     private Vector3Int playerPos = new Vector3Int();
 
     private bool characterselected = false;
+
+    public GameObject end_button;
     
     void x_tile_picker(Vector3Int mousePos, int range, float tilesize, Tile tile, float min, float max, float y)
     {
@@ -30,7 +33,7 @@ public class tile_manager : MonoBehaviour
             Vector3 vector3pos = new Vector3(mousePos.x + x, mousePos.y + y, 0);
             if (!impassibleMap.GetTile(Vector3Int.RoundToInt(vector3pos)))
             {
-                interactiveMap.SetTile(Vector3Int.RoundToInt(vector3pos), tile);
+                highlightMap.SetTile(Vector3Int.RoundToInt(vector3pos), tile);
             }
         }
     }
@@ -42,8 +45,11 @@ public class tile_manager : MonoBehaviour
             Vector3Int new_highlight_pos = new Vector3Int(highlight_pos.x + x, highlight_pos.y + y, 0);
             if (!impassibleMap.GetTile(new_highlight_pos))
             {
-                interactiveMap.SetTile(new_highlight_pos, tile);
-                new_highlighted_tiles.Add(new_highlight_pos);
+                if (!new_highlighted_tiles.Contains(new_highlight_pos))
+                {
+                    highlightMap.SetTile(new_highlight_pos, tile);
+                    new_highlighted_tiles.Add(new_highlight_pos);
+                }
             }
         }
         return new_highlighted_tiles;
@@ -95,7 +101,7 @@ public class tile_manager : MonoBehaviour
                     Vector3Int highlight_pos = new Vector3Int(mousePos.x + x, mousePos.y + y, 0);
                     if (!impassibleMap.GetTile(highlight_pos))
                     {
-                        interactiveMap.SetTile(highlight_pos, tile);
+                        highlightMap.SetTile(highlight_pos, tile);
                         highlighted_tiles.Add(highlight_pos);
                     }
                 }
@@ -153,11 +159,10 @@ public class tile_manager : MonoBehaviour
         //print(mousePos.x + Mathf.Cos(60 * i));
         //Vector3 vector3pos = new Vector3(mousePos.x + Mathf.Cos(Mathf.PI/3 * i), mousePos.y + Mathf.Sin(Mathf.PI/3 * i), 0);
         //tilelist[i] = Vector3Int.RoundToInt(vector3pos);
-        //interactiveMap.SetTile(Vector3Int.RoundToInt(vector3pos), hoverTile);
+        //highlightMap.SetTile(Vector3Int.RoundToInt(vector3pos), hoverTile);
         }*/
             
     }
-
     // Start is called before the first frame update
     void Start()
     {
@@ -177,7 +182,13 @@ public class tile_manager : MonoBehaviour
         mousePos.y = Mathf.Clamp(mousePos.y, -8, 8);
         if (!characterselected)
         {
-            interactiveMap.SetTile(previousMousePos, null);
+            highlightMap.SetTile(previousMousePos, null);
+        }
+        if (end_button.GetComponent<end_button_controller>().buttonPressed)
+        {
+            playerMap.SetTile(pastPlayerPos, null);
+            playerMap.SetTile(playerPos, playerTile);
+            highlight_tile_in_range_without_obstacle(mousePos, 40, 1f, null);
         }
         if (Input.GetMouseButton(0))
         {
@@ -188,27 +199,26 @@ public class tile_manager : MonoBehaviour
                     playerPos = mousePos;
                     highlight_tile_in_range(mousePos, 3, 1f, hoverTile);
                     characterselected = true;
-                    interactiveMap.SetTile(mousePos, selectedTile);
+                    highlightMap.SetTile(mousePos, selectedTile);
                 }
                 else if(characterselected)
                 {
-                    if (interactiveMap.GetTile(mousePos) == hoverTile)
+                    if (highlightMap.GetTile(mousePos) == hoverTile)
                     {
-                        playerMap.SetTile(playerPos, null);
+                        highlightMap.SetTile(mousePos, selectedTile);
+                        pastPlayerPos = playerPos;
                         playerPos = mousePos;
-                        playerMap.SetTile(playerPos, playerTile);
                     }
                     else
                     {
                         characterselected = false;
                     }
-                    highlight_tile_in_range_without_obstacle(mousePos, 40, 1f, null);
 
                 }
             }
             if (!characterselected)
             {
-                interactiveMap.SetTile(mousePos, selectedTile);
+                highlightMap.SetTile(mousePos, selectedTile);
             }
             //if you press lmb, the tile where your mouse is becomes "selected" whatever the fuck that means
         }
@@ -216,7 +226,7 @@ public class tile_manager : MonoBehaviour
         {
             if (!characterselected)
             {
-                interactiveMap.SetTile(mousePos, hoverTile);
+                highlightMap.SetTile(mousePos, hoverTile);
             }
             //simply hovering your mouse over a tile will make it piss yellow
         }
