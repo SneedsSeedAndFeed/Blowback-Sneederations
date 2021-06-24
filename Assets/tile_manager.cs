@@ -21,6 +21,13 @@ public class tile_manager : MonoBehaviour
     private Vector3Int previousMousePos = new Vector3Int();
     private Vector3Int pastPlayerPos = new Vector3Int();
     private Vector3Int playerPos = new Vector3Int();
+    private Vector3Int futurePlayerPos = new Vector3Int();
+
+    private Vector3Int origin = new Vector3Int(0, 0, 0);
+
+    private List<Vector3Int> new_movement_pos_list = new List<Vector3Int>();
+
+    private List<Vector3Int> player1_possible_movements_pos_list = new List<Vector3Int>();
 
     private bool characterselected = false;
 
@@ -30,6 +37,7 @@ public class tile_manager : MonoBehaviour
     {
         for (float x = min; x <= max; x += tilesize)
         {
+            x = Mathf.Clamp(x, -8, 8);
             Vector3 vector3pos = new Vector3(mousePos.x + x, mousePos.y + y, 0);
             if (!impassibleMap.GetTile(Vector3Int.RoundToInt(vector3pos)))
             {
@@ -42,6 +50,7 @@ public class tile_manager : MonoBehaviour
     {
         for (int x = min; x <= max; x ++)
         {
+            x = Mathf.Clamp(x, -8, 8);
             Vector3Int new_highlight_pos = new Vector3Int(highlight_pos.x + x, highlight_pos.y + y, 0);
             if (!impassibleMap.GetTile(new_highlight_pos))
             {
@@ -49,6 +58,7 @@ public class tile_manager : MonoBehaviour
                 {
                     highlightMap.SetTile(new_highlight_pos, tile);
                     new_highlighted_tiles.Add(new_highlight_pos);
+                    player1_possible_movements_pos_list.Add(new_highlight_pos);
                 }
             }
         }
@@ -59,8 +69,10 @@ public class tile_manager : MonoBehaviour
 
     void highlight_tile_in_range_without_obstacle(Vector3Int mousePos, int range, float tilesize, Tile tile)
     {
+        
         for (float y = -tilesize * range; y <= tilesize * range; y += tilesize)
         {
+            y = Mathf.Clamp(y,-8, 8);
             print(y);
             if (mousePos.y % 2 == 0)
             {
@@ -92,21 +104,7 @@ public class tile_manager : MonoBehaviour
 
         List<Vector3Int> highlighted_tiles = new List<Vector3Int>();
         highlighted_tiles.Add(mousePos);
-        /*for (int y = -1; y <= 1; y++)
-        {
-            if(y % 2 == 0)
-            {
-                for(int x = -1; x <= 1; x++)
-                {
-                    Vector3Int highlight_pos = new Vector3Int(mousePos.x + x, mousePos.y + y, 0);
-                    if (!impassibleMap.GetTile(highlight_pos))
-                    {
-                        highlightMap.SetTile(highlight_pos, tile);
-                        highlighted_tiles.Add(highlight_pos);
-                    }
-                }
-            }
-        }*/
+
         for(int i = 0; i < range; i++)
         {
             List<Vector3Int> new_highlighted_tiles = new List<Vector3Int>();
@@ -130,37 +128,6 @@ public class tile_manager : MonoBehaviour
             }
             highlighted_tiles = highlighted_tiles.Concat(new_highlighted_tiles).ToList();
         }
-        /*
-        for (float y = -tilesize*range; y <= tilesize*range; y+= tilesize)
-        {
-            print(y);
-            if(mousePos.y % 2 == 0)
-            {
-                if ((y) / tilesize % 2 == 0)
-                {
-                    x_tile_picker(mousePos, range, tilesize, tile, -range + Mathf.Abs(y / 2), range - Mathf.Abs(y / 2), y);
-                }
-                else
-                {
-                    x_tile_picker(mousePos, range, tilesize, tile, -range + (Mathf.Abs(y) - 1) / 2, range - (Mathf.Abs(y) + 1) / 2, y);
-                }
-            }
-            else
-            {
-                if ((y) / tilesize % 2 == 0)
-                {
-                    x_tile_picker(mousePos, range, tilesize, tile, -range + Mathf.Abs(y / 2), range - Mathf.Abs(y / 2), y);
-                }
-                else
-                {
-                    x_tile_picker(mousePos, range, tilesize, tile, -range + (Mathf.Abs(y) - 1) / 2 + tilesize, range - (Mathf.Abs(y) + 1) / 2 + tilesize, y);
-                }
-            }
-        //print(mousePos.x + Mathf.Cos(60 * i));
-        //Vector3 vector3pos = new Vector3(mousePos.x + Mathf.Cos(Mathf.PI/3 * i), mousePos.y + Mathf.Sin(Mathf.PI/3 * i), 0);
-        //tilelist[i] = Vector3Int.RoundToInt(vector3pos);
-        //highlightMap.SetTile(Vector3Int.RoundToInt(vector3pos), hoverTile);
-        }*/
             
     }
     // Start is called before the first frame update
@@ -176,16 +143,34 @@ public class tile_manager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
         // Mouse over -> highlight tile
+        bool is_a_new_movement_pos = new bool();
+        is_a_new_movement_pos = false;
         Vector3Int mousePos = GetMousePosition();
         mousePos.x = Mathf.Clamp(mousePos.x, -8, 8);
         mousePos.y = Mathf.Clamp(mousePos.y, -8, 8);
+        //keeps the recorded mouse position within the grid (so we dont end up drawing  tiles in places that we arent allowed to)
         if (!characterselected)
         {
-            highlightMap.SetTile(previousMousePos, null);
+            foreach(Vector3Int i in new_movement_pos_list)
+            {
+                if(i == previousMousePos)
+                {
+                    is_a_new_movement_pos = true;
+                }
+            }
+            if (!is_a_new_movement_pos)
+            {
+                highlightMap.SetTile(previousMousePos, null);
+            }
         }
+        //this little fucking thing removes the highlighted tile from where the mouse was previously, but to stop it from removing tiles
+        //that we actually dont want removed in this way we gotta check each one to make sure that the previous
+        //mouse position wasnt on a tile that we want to "keep"
         if (end_button.GetComponent<end_button_controller>().buttonPressed)
         {
+            playerPos = futurePlayerPos;
             playerMap.SetTile(pastPlayerPos, null);
             playerMap.SetTile(playerPos, playerTile);
             highlight_tile_in_range_without_obstacle(mousePos, 40, 1f, null);
@@ -206,8 +191,26 @@ public class tile_manager : MonoBehaviour
                     if (highlightMap.GetTile(mousePos) == hoverTile)
                     {
                         highlightMap.SetTile(mousePos, selectedTile);
+                        if(futurePlayerPos != origin || mousePos == origin)
+                        {
+                            if (futurePlayerPos != mousePos)
+                            {
+                                highlightMap.SetTile(futurePlayerPos, hoverTile);
+                                new_movement_pos_list.Remove(futurePlayerPos);
+                            }
+                        }
                         pastPlayerPos = playerPos;
-                        playerPos = mousePos;
+                        futurePlayerPos = mousePos;
+                        new_movement_pos_list.Add(futurePlayerPos);
+                        characterselected = false;
+                        foreach(Vector3Int i in player1_possible_movements_pos_list)
+                        {
+                            if(highlightMap.GetTile(i) == hoverTile)
+                            {
+                                highlightMap.SetTile(i, null);
+                            }
+                        }
+                        player1_possible_movements_pos_list.Clear();
                     }
                     else
                     {
