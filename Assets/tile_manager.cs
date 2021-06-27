@@ -36,6 +36,8 @@ public class tile_manager : MonoBehaviour
     
 
     public GameObject end_button;
+
+    public GameObject stats_ui;
     
     
 
@@ -46,7 +48,7 @@ public class tile_manager : MonoBehaviour
 
     void x_tile_picker(Vector3Int mousePos, int range, int tilesize, Tile tile, int min, int max, int y)
     {
-        for (int x = min; x <= max; x += tilesize)
+        for (int x = min; x <= max; x ++)
         {
             Vector3Int pos = new Vector3Int(Mathf.Clamp(mousePos.x + x, -8,8), Mathf.Clamp(mousePos.y + y,-8,8), 0);
             if (!impassibleMap.GetTile(pos))
@@ -64,21 +66,33 @@ public class tile_manager : MonoBehaviour
 
 
 
-    List<Vector3Int> x_tile_picker(List<Vector3Int> new_highlighted_tiles,Vector3Int highlight_pos, Tile tile, int min, int max, int y)
+    List<Vector3Int> x_tile_picker(List<Vector3Int> new_highlighted_tiles,List<Vector3Int> poslist,Vector3Int highlight_pos, Tile tile, int min, int max, int y)
     {
         for (int x = min; x <= max; x ++)
         {
             Vector3Int new_highlight_pos = new Vector3Int(Mathf.Clamp(highlight_pos.x + x,-8,8), Mathf.Clamp(highlight_pos.y + y,-8,8), 0);
             if (!impassibleMap.GetTile(new_highlight_pos))
             {
-                if (player.possible_movement_pos_list != null)
+                if (!poslist.Contains(new_highlight_pos))
                 {
-                    if (!player.possible_movement_pos_list.Contains(new_highlight_pos))
-                    {
-                        highlightMap.SetTile(new_highlight_pos, tile);
-                        new_highlighted_tiles.Add(new_highlight_pos);
-                        player.possible_movement_pos_list.Add(new_highlight_pos);
-                    }
+                    new_highlighted_tiles.Add(new_highlight_pos);
+                    poslist.Add(new_highlight_pos);
+                }
+            }
+        }
+        return new_highlighted_tiles;
+    }
+
+    List<Vector3Int> x_tile_picker(List<Vector3Int> new_highlighted_tiles, Vector3Int highlight_pos, int min, int max, int y)
+    {
+        for (int x = min; x <= max; x++)
+        {
+            Vector3Int new_highlight_pos = new Vector3Int(Mathf.Clamp(highlight_pos.x + x, -8, 8), Mathf.Clamp(highlight_pos.y + y, -8, 8), 0);
+            if (!impassibleMap.GetTile(new_highlight_pos))
+            {
+                if (!new_highlighted_tiles.Contains(new_highlight_pos))
+                {
+                    new_highlighted_tiles.Add(new_highlight_pos);
                 }
             }
         }
@@ -128,7 +142,7 @@ public class tile_manager : MonoBehaviour
 
 
 
-    void highlight_tile_in_range(Vector3Int mousePos, int range, float tilesize, Tile tile)
+    void highlight_tile_in_range(Vector3Int mousePos, List<Vector3Int> poslist, int range, float tilesize, Tile tile)
     {
 
         List<Vector3Int> highlighted_tiles = new List<Vector3Int>();
@@ -143,15 +157,15 @@ public class tile_manager : MonoBehaviour
                 {
                     if (y % 2 == 0)
                     {
-                        new_highlighted_tiles = x_tile_picker(new_highlighted_tiles,highlight_pos, tile, -1, 1, y);
+                        new_highlighted_tiles = x_tile_picker(new_highlighted_tiles, poslist, highlight_pos, tile, -1, 1, y);
                     }
                     else if(highlight_pos.y % 2 != 0)
                     {
-                        new_highlighted_tiles = x_tile_picker(new_highlighted_tiles, highlight_pos, tile, 0, 1, y);
+                        new_highlighted_tiles = x_tile_picker(new_highlighted_tiles, poslist, highlight_pos, tile, 0, 1, y);
                     }
                     else
                     {
-                        new_highlighted_tiles = x_tile_picker(new_highlighted_tiles, highlight_pos, tile, -1, 0, y);
+                        new_highlighted_tiles = x_tile_picker(new_highlighted_tiles, poslist, highlight_pos, tile, -1, 0, y);
                     }
                 }
             }
@@ -160,7 +174,45 @@ public class tile_manager : MonoBehaviour
             
     }
 
+    IEnumerator FindDist(Vector3Int shooterPos, Vector3Int target, int range, System.Action<int> callBack)
+    {
 
+        List<Vector3Int> highlighted_tiles = new List<Vector3Int>();
+        highlighted_tiles.Add(shooterPos);
+
+        for (int i = 0; i < range; i++)
+        {
+            List<Vector3Int> new_highlighted_tiles = new List<Vector3Int>();
+            foreach (Vector3Int highlight_pos in highlighted_tiles)
+            {
+                for (int y = -1; y <= 1; y++)
+                {
+                    if (y % 2 == 0)
+                    {
+                        new_highlighted_tiles = x_tile_picker(new_highlighted_tiles, highlight_pos, -1, 1, y);
+                    }
+                    else if (highlight_pos.y % 2 != 0)
+                    {
+                        new_highlighted_tiles = x_tile_picker(new_highlighted_tiles, highlight_pos, 0, 1, y);
+                    }
+                    else
+                    {
+                        new_highlighted_tiles = x_tile_picker(new_highlighted_tiles, highlight_pos, -1, 0, y);
+                    }
+                }
+            }
+            highlighted_tiles = highlighted_tiles.Concat(new_highlighted_tiles).ToList();
+            if (highlighted_tiles.Contains(enemy.pos))
+            {
+                yield return i;
+                callBack(i);
+            }
+        }
+
+        yield return -1;
+        callBack(-1);
+
+    }
 
 
 
@@ -187,8 +239,25 @@ public class tile_manager : MonoBehaviour
     }
 
 
-
-
+    string get_hit_chance()
+    {
+        int distance = -1;
+        StartCoroutine(
+            FindDist(player.pos, enemy.pos, 10, (int i) => {
+                distance = i;
+            })
+        );
+        if (distance == -1)
+        {
+            return "0%";
+        }
+        else
+        {
+            float chance = 70 * (100 - distance*distance) / 100;
+            chance = Mathf.Floor(chance);
+            return chance.ToString()+"%";
+        }
+    }
 
 
 
@@ -202,7 +271,11 @@ public class tile_manager : MonoBehaviour
                 if (playerMap.GetTile(mousePos) == player.tile)
                 {
                     player.pos= mousePos;
-                    highlight_tile_in_range(mousePos, 3, 1f, hoverTile);
+                    highlight_tile_in_range(mousePos, player.possible_movement_pos_list, 3, 1f, hoverTile);
+                    foreach(Vector3Int i in player.possible_movement_pos_list)
+                    {
+                        highlightMap.SetTile(i, hoverTile);
+                    }
                     player.possible_movement_pos_list.Remove(enemy.pos);
 
                     player.selected = true;
@@ -264,9 +337,9 @@ public class tile_manager : MonoBehaviour
                 if(mousePos == enemy.pos)
                 {
 
+                    stats_ui.GetComponent<panel_stats_display>().display_everything("enemy", get_hit_chance(), "100%");
                 }
             }
-            //if you press lmb, the tile where your mouse is becomes "selected" whatever the fuck that means
         }
         else
         {
@@ -333,6 +406,7 @@ public class tile_manager : MonoBehaviour
         playerMap.SetTile(enemy.pos, enemy.tile);
         //drops player in some random spot
         grid = gameObject.GetComponent<Grid>();
+
     }
 
 
