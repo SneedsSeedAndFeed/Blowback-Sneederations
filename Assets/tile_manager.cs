@@ -5,8 +5,15 @@ using UnityEngine.Tilemaps;
 using UnityEngine.UIElements;
 using System.Linq;
 
+
+
 public class tile_manager : MonoBehaviour
 {
+
+    Unit player = new Unit();
+    Unit enemy = new Unit();
+
+
     private Grid grid;
     [SerializeField] private Tilemap highlightMap = null;
     [SerializeField] private Tilemap groundMap = null;
@@ -14,51 +21,64 @@ public class tile_manager : MonoBehaviour
     [SerializeField] private Tilemap impassibleMap = null;
     [SerializeField] private Tilemap playerMap = null;
     [SerializeField] private Tile hoverTile = null;
+    [SerializeField] private Tile redTile = null;
+    [SerializeField] private Tile hoverRedTile = null;
+    [SerializeField] private Tile greenTile = null;
     [SerializeField] private Tile selectedTile = null;
     [SerializeField] private Tile playerTile = null;
+    [SerializeField] private Tile enemyTile = null;
 
 
     private Vector3Int previousMousePos = new Vector3Int();
-    private Vector3Int pastPlayerPos = new Vector3Int();
-    private Vector3Int playerPos = new Vector3Int();
-    private Vector3Int futurePlayerPos = new Vector3Int();
+    
 
     private Vector3Int origin = new Vector3Int(0, 0, 0);
-
-    private List<Vector3Int> new_movement_pos_list = new List<Vector3Int>();
-
-    private List<Vector3Int> player1_possible_movements_pos_list = new List<Vector3Int>();
-
-    private bool characterselected = false;
+    
 
     public GameObject end_button;
     
-    void x_tile_picker(Vector3Int mousePos, int range, float tilesize, Tile tile, float min, float max, float y)
+    
+
+
+
+
+
+
+    void x_tile_picker(Vector3Int mousePos, int range, int tilesize, Tile tile, int min, int max, int y)
     {
-        for (float x = min; x <= max; x += tilesize)
+        for (int x = min; x <= max; x += tilesize)
         {
-            x = Mathf.Clamp(x, -8, 8);
-            Vector3 vector3pos = new Vector3(mousePos.x + x, mousePos.y + y, 0);
-            if (!impassibleMap.GetTile(Vector3Int.RoundToInt(vector3pos)))
+            Vector3Int pos = new Vector3Int(Mathf.Clamp(mousePos.x + x, -8,8), Mathf.Clamp(mousePos.y + y,-8,8), 0);
+            if (!impassibleMap.GetTile(pos))
             {
-                highlightMap.SetTile(Vector3Int.RoundToInt(vector3pos), tile);
+                highlightMap.SetTile(pos, tile);
             }
         }
     }
+
+
+
+
+
+
+
+
 
     List<Vector3Int> x_tile_picker(List<Vector3Int> new_highlighted_tiles,Vector3Int highlight_pos, Tile tile, int min, int max, int y)
     {
         for (int x = min; x <= max; x ++)
         {
-            x = Mathf.Clamp(x, -8, 8);
-            Vector3Int new_highlight_pos = new Vector3Int(highlight_pos.x + x, highlight_pos.y + y, 0);
+            Vector3Int new_highlight_pos = new Vector3Int(Mathf.Clamp(highlight_pos.x + x,-8,8), Mathf.Clamp(highlight_pos.y + y,-8,8), 0);
             if (!impassibleMap.GetTile(new_highlight_pos))
             {
-                if (!new_highlighted_tiles.Contains(new_highlight_pos))
+                if (player.possible_movement_pos_list != null)
                 {
-                    highlightMap.SetTile(new_highlight_pos, tile);
-                    new_highlighted_tiles.Add(new_highlight_pos);
-                    player1_possible_movements_pos_list.Add(new_highlight_pos);
+                    if (!player.possible_movement_pos_list.Contains(new_highlight_pos))
+                    {
+                        highlightMap.SetTile(new_highlight_pos, tile);
+                        new_highlighted_tiles.Add(new_highlight_pos);
+                        player.possible_movement_pos_list.Add(new_highlight_pos);
+                    }
                 }
             }
         }
@@ -67,13 +87,16 @@ public class tile_manager : MonoBehaviour
 
 
 
-    void highlight_tile_in_range_without_obstacle(Vector3Int mousePos, int range, float tilesize, Tile tile)
+
+
+
+
+
+    void highlight_tile_in_range_without_obstacle(Vector3Int mousePos, int range, int tilesize, Tile tile)
     {
         
-        for (float y = -tilesize * range; y <= tilesize * range; y += tilesize)
+        for (int y = -tilesize * range; y <= tilesize * range; y += tilesize)
         {
-            y = Mathf.Clamp(y,-8, 8);
-            print(y);
             if (mousePos.y % 2 == 0)
             {
                 if ((y) / tilesize % 2 == 0)
@@ -98,6 +121,12 @@ public class tile_manager : MonoBehaviour
             }
         }
     }
+
+
+
+
+
+
 
     void highlight_tile_in_range(Vector3Int mousePos, int range, float tilesize, Tile tile)
     {
@@ -130,114 +159,224 @@ public class tile_manager : MonoBehaviour
         }
             
     }
+
+
+
+
+
+
+
+    void remove_prev_mousePos(Vector3Int prevMousePos)
+    {
+        bool can_be_removed = new bool();
+        can_be_removed = false;
+        if (!player.selected)
+        {
+            if(player.new_movement_pos_list != null)
+            {
+                foreach (Vector3Int i in player.new_movement_pos_list)
+                {
+                    if (i == prevMousePos)
+                    {
+                        can_be_removed = true;
+                    }
+                }
+            }
+            if (!can_be_removed)
+            {
+                highlightMap.SetTile(prevMousePos, null);
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+    void player_movement_control(Vector3Int mousePos)
+    {
+        if (Input.GetMouseButton(0))
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                if (playerMap.GetTile(mousePos) == player.tile)
+                {
+                    player.pos= mousePos;
+                    highlight_tile_in_range(mousePos, 3, 1f, hoverTile);
+                    if(player.possible_movement_pos_list != null)
+                    {
+                        player.possible_movement_pos_list.Remove(enemy.pos);
+                    }
+
+                    player.selected = true;
+                    highlightMap.SetTile(mousePos, selectedTile);
+                    highlightMap.SetTile(enemy.pos, hoverRedTile);
+                }
+                else if (player.selected)
+                {
+                    if(player.possible_movement_pos_list != null)
+                    {
+                        if (player.possible_movement_pos_list.Contains(mousePos))
+                        {
+                            highlightMap.SetTile(mousePos, selectedTile);
+                            if (player.futurePos != mousePos)
+                            {
+                                player.new_movement_pos_list.Remove(player.futurePos);
+                            }
+                            player.pastPos = player.pos;
+                            player.futurePos = mousePos;
+                            player.new_movement_pos_list.Add(player.futurePos);
+                            player.selected = false;
+                        }
+                        else if (mousePos == enemy.pos)
+                        {
+                            highlightMap.SetTile(mousePos, redTile);
+                        }
+                        else
+                        {
+                            player.selected = false;
+                        }
+                        foreach (Vector3Int i in player.possible_movement_pos_list)
+                        {
+                            if (highlightMap.GetTile(i) == hoverTile || i == player.pos)
+                            {
+                                highlightMap.SetTile(i, null);
+                            }
+                        }
+                        highlightMap.SetTile(player.futurePos, greenTile);
+                        player.possible_movement_pos_list.Clear();
+                    }
+
+                }
+            }
+            if (!player.selected)
+            {
+                if (mousePos == player.futurePos)
+                {
+                    highlightMap.SetTile(mousePos, greenTile);
+                }
+                else
+                {
+                    highlightMap.SetTile(mousePos, selectedTile);
+                }
+                if(highlightMap.GetTile(enemy.pos) == hoverRedTile)
+                {
+                    highlightMap.SetTile(enemy.pos, null);
+                }
+            }
+            if (player.selected)
+            {
+                if(mousePos == enemy.pos)
+                {
+
+                }
+            }
+            //if you press lmb, the tile where your mouse is becomes "selected" whatever the fuck that means
+        }
+        else
+        {
+            if (!player.selected)
+            {
+
+                if (mousePos == player.futurePos)
+                {
+                    highlightMap.SetTile(mousePos, greenTile);
+                }
+                else
+                {
+                    highlightMap.SetTile(mousePos, hoverTile);
+                }
+            }
+            //simply hovering your mouse over a tile will make it piss yellow
+        }
+    }
+
+   
+
+
+
+
+
+
+    void endButton(Vector3Int mousePos)
+    {
+        if (end_button.GetComponent<end_button_controller>().buttonPressed)
+        {
+           player.pos = player.futurePos;
+            if(player.new_movement_pos_list != null)
+            {
+                player.new_movement_pos_list.Clear();
+            }
+            playerMap.SetTile(player.pastPos, null);
+            playerMap.SetTile(player.pos, player.tile);
+            highlight_tile_in_range_without_obstacle(mousePos, 40, 1, null);
+        }
+    }
+
+
+
+
+
+    
+
+
+
+
+
     // Start is called before the first frame update
     void Start()
     {
-        Vector3Int randpos = new Vector3Int(Random.Range(-8, 8), Random.Range(-8, 8), 0);
-        playerPos = randpos;
-        playerMap.SetTile(randpos, playerTile);
+        player.pos = player.randPos(-8, 8);
+        enemy.pos = enemy.randPos(-8, 8);
+        while (player.pos == enemy.pos || !groundMap.GetTile(player.pos) || !groundMap.GetTile(enemy.pos))
+        {
+            player.pos = player.randPos(-8,8);
+            player.pos = player.randPos(-8, 8);
+        }
+        player.futurePos = player.pos;
+        enemy.futurePos = enemy.pos;
+        player.tile = playerTile;
+        enemy.tile = enemyTile;
+        playerMap.SetTile(player.pos, player.tile);
+        playerMap.SetTile(enemy.pos, enemy.tile);
         //drops player in some random spot
         grid = gameObject.GetComponent<Grid>();
     }
+
+
+
+
 
     // Update is called once per frame
     void Update()
     {
 
         // Mouse over -> highlight tile
-        bool is_a_new_movement_pos = new bool();
-        is_a_new_movement_pos = false;
         Vector3Int mousePos = GetMousePosition();
         mousePos.x = Mathf.Clamp(mousePos.x, -8, 8);
         mousePos.y = Mathf.Clamp(mousePos.y, -8, 8);
         //keeps the recorded mouse position within the grid (so we dont end up drawing  tiles in places that we arent allowed to)
-        if (!characterselected)
-        {
-            foreach(Vector3Int i in new_movement_pos_list)
-            {
-                if(i == previousMousePos)
-                {
-                    is_a_new_movement_pos = true;
-                }
-            }
-            if (!is_a_new_movement_pos)
-            {
-                highlightMap.SetTile(previousMousePos, null);
-            }
-        }
+        endButton(mousePos);
+        //pressing the end button causes every chosen action to occur and eventually the ai will do their move here too.
+
+        remove_prev_mousePos(previousMousePos);
         //this little fucking thing removes the highlighted tile from where the mouse was previously, but to stop it from removing tiles
         //that we actually dont want removed in this way we gotta check each one to make sure that the previous
         //mouse position wasnt on a tile that we want to "keep"
-        if (end_button.GetComponent<end_button_controller>().buttonPressed)
-        {
-            playerPos = futurePlayerPos;
-            playerMap.SetTile(pastPlayerPos, null);
-            playerMap.SetTile(playerPos, playerTile);
-            highlight_tile_in_range_without_obstacle(mousePos, 40, 1f, null);
-        }
-        if (Input.GetMouseButton(0))
-        {
-            if (Input.GetMouseButtonDown(0))
-            {
-                if (playerMap.GetTile(mousePos))
-                {
-                    playerPos = mousePos;
-                    highlight_tile_in_range(mousePos, 3, 1f, hoverTile);
-                    characterselected = true;
-                    highlightMap.SetTile(mousePos, selectedTile);
-                }
-                else if(characterselected)
-                {
-                    if (highlightMap.GetTile(mousePos) == hoverTile)
-                    {
-                        highlightMap.SetTile(mousePos, selectedTile);
-                        if(futurePlayerPos != origin || mousePos == origin)
-                        {
-                            if (futurePlayerPos != mousePos)
-                            {
-                                highlightMap.SetTile(futurePlayerPos, hoverTile);
-                                new_movement_pos_list.Remove(futurePlayerPos);
-                            }
-                        }
-                        pastPlayerPos = playerPos;
-                        futurePlayerPos = mousePos;
-                        new_movement_pos_list.Add(futurePlayerPos);
-                        characterselected = false;
-                        foreach(Vector3Int i in player1_possible_movements_pos_list)
-                        {
-                            if(highlightMap.GetTile(i) == hoverTile)
-                            {
-                                highlightMap.SetTile(i, null);
-                            }
-                        }
-                        player1_possible_movements_pos_list.Clear();
-                    }
-                    else
-                    {
-                        characterselected = false;
-                    }
 
-                }
-            }
-            if (!characterselected)
-            {
-                highlightMap.SetTile(mousePos, selectedTile);
-            }
-            //if you press lmb, the tile where your mouse is becomes "selected" whatever the fuck that means
-        }
-        else
-        {
-            if (!characterselected)
-            {
-                highlightMap.SetTile(mousePos, hoverTile);
-            }
-            //simply hovering your mouse over a tile will make it piss yellow
-        }
+        player_movement_control(mousePos);
+        //
+
         previousMousePos = mousePos;
 
         
         
     }
+
+
 
     Vector3Int GetMousePosition()
     {
