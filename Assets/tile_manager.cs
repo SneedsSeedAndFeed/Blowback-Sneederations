@@ -332,14 +332,6 @@ public class tile_manager : MonoBehaviour
                     highlightMap.SetTile(enemy.pos, null);
                 }
             }
-            if (player.selected)
-            {
-                if(mousePos == enemy.pos)
-                {
-
-                    stats_ui.GetComponent<panel_stats_display>().display_everything("enemy", get_hit_chance(), "100%");
-                }
-            }
         }
         else
         {
@@ -353,6 +345,18 @@ public class tile_manager : MonoBehaviour
                 else
                 {
                     highlightMap.SetTile(mousePos, hoverTile);
+                }
+            }
+            else
+            {
+                if (mousePos == enemy.pos)
+                {
+
+                    stats_ui.GetComponent<panel_stats_display>().display_everything("enemy", get_hit_chance(), "100%");
+                }
+                else
+                {
+                    stats_ui.GetComponent<panel_stats_display>().remove_everything();
                 }
             }
             //simply hovering your mouse over a tile will make it piss yellow

@@ -1,12 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class panel_stats_display : MonoBehaviour
 {
-    public TextMesh char_name;
-    public TextMesh char_hit_chance;
-    public TextMesh char_health_percent;
+    public TextMeshProUGUI char_name;
+    public TextMeshProUGUI char_hit_chance;
+    public TextMeshProUGUI char_health_percent;
 
     // Start is called before the first frame update
     void Start()
