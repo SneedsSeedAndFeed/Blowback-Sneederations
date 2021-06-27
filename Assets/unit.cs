@@ -20,6 +20,8 @@ public class Unit
     public Unit()
     {
         selected = false;
+        new_movement_pos_list = new List<Vector3Int>();
+        possible_movement_pos_list = new List<Vector3Int>();
 
     }
     public Vector3Int randPos(int min_pos,int max_pos)

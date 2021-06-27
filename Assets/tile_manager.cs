@@ -172,14 +172,11 @@ public class tile_manager : MonoBehaviour
         can_be_removed = false;
         if (!player.selected)
         {
-            if(player.new_movement_pos_list != null)
+            foreach (Vector3Int i in player.new_movement_pos_list)
             {
-                foreach (Vector3Int i in player.new_movement_pos_list)
+                if (i == prevMousePos)
                 {
-                    if (i == prevMousePos)
-                    {
-                        can_be_removed = true;
-                    }
+                    can_be_removed = true;
                 }
             }
             if (!can_be_removed)
@@ -206,10 +203,7 @@ public class tile_manager : MonoBehaviour
                 {
                     player.pos= mousePos;
                     highlight_tile_in_range(mousePos, 3, 1f, hoverTile);
-                    if(player.possible_movement_pos_list != null)
-                    {
-                        player.possible_movement_pos_list.Remove(enemy.pos);
-                    }
+                    player.possible_movement_pos_list.Remove(enemy.pos);
 
                     player.selected = true;
                     highlightMap.SetTile(mousePos, selectedTile);
@@ -217,38 +211,36 @@ public class tile_manager : MonoBehaviour
                 }
                 else if (player.selected)
                 {
-                    if(player.possible_movement_pos_list != null)
+                    if (player.possible_movement_pos_list.Contains(mousePos))
                     {
-                        if (player.possible_movement_pos_list.Contains(mousePos))
+                        highlightMap.SetTile(mousePos, selectedTile);
+                        if (player.futurePos != mousePos)
                         {
-                            highlightMap.SetTile(mousePos, selectedTile);
-                            if (player.futurePos != mousePos)
-                            {
-                                player.new_movement_pos_list.Remove(player.futurePos);
-                            }
-                            player.pastPos = player.pos;
-                            player.futurePos = mousePos;
-                            player.new_movement_pos_list.Add(player.futurePos);
-                            player.selected = false;
+                            player.new_movement_pos_list.Remove(player.futurePos);
                         }
-                        else if (mousePos == enemy.pos)
-                        {
-                            highlightMap.SetTile(mousePos, redTile);
-                        }
-                        else
-                        {
-                            player.selected = false;
-                        }
-                        foreach (Vector3Int i in player.possible_movement_pos_list)
-                        {
-                            if (highlightMap.GetTile(i) == hoverTile || i == player.pos)
-                            {
-                                highlightMap.SetTile(i, null);
-                            }
-                        }
-                        highlightMap.SetTile(player.futurePos, greenTile);
-                        player.possible_movement_pos_list.Clear();
+                        player.pastPos = player.pos;
+                        player.futurePos = mousePos;
+                        player.new_movement_pos_list.Add(player.futurePos);
+                        player.selected = false;
                     }
+                    else if (mousePos == enemy.pos)
+                    {
+                        highlightMap.SetTile(mousePos, redTile);
+                    }
+                    else
+                    {
+                        player.selected = false;
+                    }
+                    foreach (Vector3Int i in player.possible_movement_pos_list)
+                    {
+                        if (highlightMap.GetTile(i) == hoverTile || i == player.pos)
+                        {
+                            highlightMap.SetTile(i, null);
+                        }
+                    }
+                    highlightMap.SetTile(player.futurePos, greenTile);
+                    player.possible_movement_pos_list.Clear();
+                    
 
                 }
             }
@@ -306,10 +298,7 @@ public class tile_manager : MonoBehaviour
         if (end_button.GetComponent<end_button_controller>().buttonPressed)
         {
            player.pos = player.futurePos;
-            if(player.new_movement_pos_list != null)
-            {
-                player.new_movement_pos_list.Clear();
-            }
+            player.new_movement_pos_list.Clear();
             playerMap.SetTile(player.pastPos, null);
             playerMap.SetTile(player.pos, player.tile);
             highlight_tile_in_range_without_obstacle(mousePos, 40, 1, null);
@@ -371,7 +360,6 @@ public class tile_manager : MonoBehaviour
         //
 
         previousMousePos = mousePos;
-
         
         
     }
