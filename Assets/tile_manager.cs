@@ -38,8 +38,8 @@ public class tile_manager : MonoBehaviour
     public GameObject end_button;
 
     public GameObject stats_ui;
-    
-    
+
+    public int distance = new int();
 
 
 
@@ -174,7 +174,7 @@ public class tile_manager : MonoBehaviour
             
     }
 
-    IEnumerator FindDist(Vector3Int shooterPos, Vector3Int target, int range, System.Action<int> callBack)
+    int FindDist(Vector3Int shooterPos, Vector3Int target, int range)
     {
 
         List<Vector3Int> highlighted_tiles = new List<Vector3Int>();
@@ -204,13 +204,13 @@ public class tile_manager : MonoBehaviour
             highlighted_tiles = highlighted_tiles.Concat(new_highlighted_tiles).ToList();
             if (highlighted_tiles.Contains(enemy.pos))
             {
-                yield return i;
-                callBack(i);
+                return i + 1;
             }
         }
-
+        return 0;
+        /*
         yield return -1;
-        callBack(-1);
+        callBack(-1);*/
 
     }
 
@@ -239,23 +239,21 @@ public class tile_manager : MonoBehaviour
     }
 
 
-    string get_hit_chance()
+    float get_hit_chance()
     {
-        int distance = -1;
-        StartCoroutine(
-            FindDist(player.pos, enemy.pos, 10, (int i) => {
-                distance = i;
-            })
-        );
-        if (distance == -1)
+        distance = 0;
+        distance = FindDist(player.pos, enemy.pos, 10);
+        print(distance);
+        //print(distance);
+        if (distance == 0)
         {
-            return "0%";
+            return 0;
         }
         else
         {
             float chance = 70 * (100 - distance*distance) / 100;
             chance = Mathf.Floor(chance);
-            return chance.ToString()+"%";
+            return chance;
         }
     }
 
@@ -266,6 +264,7 @@ public class tile_manager : MonoBehaviour
     {
         if (Input.GetMouseButton(0))
         {
+            stats_ui.GetComponent<panel_stats_display>().remove_everything();
             if (Input.GetMouseButtonDown(0))
             {
                 if (playerMap.GetTile(mousePos) == player.tile)
@@ -352,7 +351,7 @@ public class tile_manager : MonoBehaviour
                 if (mousePos == enemy.pos)
                 {
 
-                    stats_ui.GetComponent<panel_stats_display>().display_everything("enemy", get_hit_chance(), "100%");
+                    stats_ui.GetComponent<panel_stats_display>().display_everything("enemy", get_hit_chance().ToString() + "%", "100%");
                 }
                 else
                 {
