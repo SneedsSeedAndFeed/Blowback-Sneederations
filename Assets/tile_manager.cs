@@ -27,6 +27,7 @@ public class tile_manager : MonoBehaviour
     [SerializeField] private Tile selectedTile = null;
     [SerializeField] private Tile playerTile = null;
     [SerializeField] private Tile enemyTile = null;
+    [SerializeField] private Tile dead_enemy = null;
 
 
     private Vector3Int previousMousePos = new Vector3Int();
@@ -351,7 +352,7 @@ public class tile_manager : MonoBehaviour
                 if (mousePos == enemy.pos)
                 {
 
-                    stats_ui.GetComponent<panel_stats_display>().display_everything("enemy", get_hit_chance().ToString() + "%", "100%");
+                    stats_ui.GetComponent<panel_stats_display>().display_everything("enemy", get_hit_chance().ToString() + "%", enemy.health.ToString()+"%");
                 }
                 else
                 {
@@ -373,10 +374,29 @@ public class tile_manager : MonoBehaviour
     {
         if (end_button.GetComponent<end_button_controller>().buttonPressed)
         {
-           player.pos = player.futurePos;
+            if(highlightMap.GetTile(enemy.pos) == redTile)
+            {
+                if(Random.Range(0, 100) <= get_hit_chance())
+                {
+                    enemy.health -= Random.Range(get_hit_chance(), 100);
+                    enemy.health = Mathf.Floor(enemy.health);
+                    if (enemy.health <= 0){
+                        enemy.health = 0;
+                        enemy.tile = dead_enemy;
+                        
+                    }
+                    
+                }
+                else
+                {
+                    print("miss");
+                }
+            }
+            player.pos = player.futurePos;
             player.new_movement_pos_list.Clear();
             playerMap.SetTile(player.pastPos, null);
             playerMap.SetTile(player.pos, player.tile);
+            playerMap.SetTile(enemy.pos, enemy.tile);
             highlight_tile_in_range_without_obstacle(mousePos, 40, 1, null);
         }
     }

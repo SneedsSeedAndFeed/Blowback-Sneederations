@@ -1035,6 +1035,7 @@ MonoBehaviour:
   selectedTile: {fileID: 11400000, guid: f91ac79dd9c8b1041b94d9c1f85e5495, type: 2}
   playerTile: {fileID: 11400000, guid: 66542e52c04469c4a8b86c3281ff3b0b, type: 2}
   enemyTile: {fileID: 11400000, guid: f7f1ee15dde00c94e8c0e5d46dde9471, type: 2}
+  dead_enemy: {fileID: 11400000, guid: d3db7e6912a399d49b86f056bda2c5ff, type: 2}
   end_button: {fileID: 581803185}
   stats_ui: {fileID: 1055182725}
   distance: 0

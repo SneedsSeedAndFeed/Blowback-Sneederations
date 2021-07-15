@@ -13,6 +13,8 @@ public class Unit
     public List<Vector3Int> new_movement_pos_list;
     public List<Vector3Int> possible_movement_pos_list;
 
+    public float health = 100;
+
     public Tile tile;
 
     public bool selected;
