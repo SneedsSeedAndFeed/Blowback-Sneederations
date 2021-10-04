@@ -276,11 +276,15 @@ public class tile_manager : MonoBehaviour
                     {
                         highlightMap.SetTile(i, hoverTile);
                     }
-                    player.possible_movement_pos_list.Remove(enemy.pos);
+                    if(enemy.health != 0)
+                    {
+                        player.possible_movement_pos_list.Remove(enemy.pos);
+                        highlightMap.SetTile(enemy.pos, hoverRedTile);
+
+                    }
 
                     player.selected = true;
                     highlightMap.SetTile(mousePos, selectedTile);
-                    highlightMap.SetTile(enemy.pos, hoverRedTile);
                 }
                 else if (player.selected)
                 {
@@ -311,7 +315,14 @@ public class tile_manager : MonoBehaviour
                             highlightMap.SetTile(i, null);
                         }
                     }
-                    highlightMap.SetTile(player.futurePos, greenTile);
+                    if(player.futurePos != player.pos)
+                    {
+                        highlightMap.SetTile(player.futurePos, greenTile);
+
+                    }
+                    //this particular thing stops the game from placing an unwanted future movement tile on the position that the player already is
+
+
                     player.possible_movement_pos_list.Clear();
                     
 
@@ -349,7 +360,7 @@ public class tile_manager : MonoBehaviour
             }
             else
             {
-                if (mousePos == enemy.pos)
+                if (mousePos == enemy.pos && enemy.health != 0)
                 {
 
                     stats_ui.GetComponent<panel_stats_display>().display_everything("enemy", get_hit_chance().ToString() + "%", enemy.health.ToString()+"%");
@@ -383,7 +394,6 @@ public class tile_manager : MonoBehaviour
                     if (enemy.health <= 0){
                         enemy.health = 0;
                         enemy.tile = dead_enemy;
-                        
                     }
                     
                 }
@@ -395,8 +405,8 @@ public class tile_manager : MonoBehaviour
             player.pos = player.futurePos;
             player.new_movement_pos_list.Clear();
             playerMap.SetTile(player.pastPos, null);
-            playerMap.SetTile(player.pos, player.tile);
             playerMap.SetTile(enemy.pos, enemy.tile);
+            playerMap.SetTile(player.pos, player.tile);
             highlight_tile_in_range_without_obstacle(mousePos, 40, 1, null);
         }
     }
