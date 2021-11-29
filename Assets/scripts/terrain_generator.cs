@@ -9,6 +9,7 @@ public class terrain_generator : MonoBehaviour
     public GameObject[] pebbles;
     public GameObject[] boulders;
     public GameObject[] trees;
+    public GameObject house;
     //T stands for terrain, intelligent i know.
 
     private TerrainData t_data;
@@ -75,8 +76,19 @@ public class terrain_generator : MonoBehaviour
                 }
                 if (Random.Range(0f, 100f) <= 0.002f)
                 {
-                    Vector3 position = new Vector3(x * 300 / t_data.alphamapWidth, 0.1f, y * 200 / t_data.alphamapHeight);
-                    Instantiate(boulders[Random.Range(0, 3)], position, Quaternion.Euler(90, 0, Random.Range(0f,90f)));
+                    if(x > 10 && y > 10)
+                    {
+                        Vector3 position = new Vector3(x * 300 / t_data.alphamapWidth, 20f, y * 200 / t_data.alphamapHeight);
+                        Instantiate(boulders[Random.Range(0, 3)], position, Quaternion.Euler(90, 0, Random.Range(0f, 90f)));
+                    }
+                }
+                if (Random.Range(0f, 100f) <= 0.001f)
+                {
+                    if (x > 10 && y > 10)
+                    {
+                        Vector3 position = new Vector3(x * 300 / t_data.alphamapWidth, 20f, y * 200 / t_data.alphamapHeight);
+                        Instantiate(house, position, Quaternion.Euler(0, 0, Random.Range(0f, 90f)));
+                    }
                 }
                 float green_value = NextGaussian(input_mean, 0.25f, 0f, 1f);
                 float dirt_value = 1 - green_value;

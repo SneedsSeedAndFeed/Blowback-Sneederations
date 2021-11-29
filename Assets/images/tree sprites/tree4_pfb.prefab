@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: -1519766325248930414}
   - component: {fileID: 6738567311462132575}
   m_Layer: 0
-  m_Name: tree1_pfb
+  m_Name: tree4_pfb
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -71,8 +71,8 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 3
-  m_Sprite: {fileID: 21300000, guid: 9f2ed1f0ce35406478508b83fb88dffc, type: 3}
+  m_SortingOrder: 4
+  m_Sprite: {fileID: 21300000, guid: d38303d23e55c4e41a8aeadcad0a4717, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

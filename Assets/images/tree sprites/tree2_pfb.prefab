@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: -1519766325248930414}
   - component: {fileID: 6738567311462132575}
   m_Layer: 0
-  m_Name: tree3_pfb
+  m_Name: tree2_pfb
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -71,8 +71,8 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 3
-  m_Sprite: {fileID: 21300000, guid: 3f3f28b5d427c8f40b71817226ba48cf, type: 3}
+  m_SortingOrder: 4
+  m_Sprite: {fileID: 21300000, guid: 76b72b37b4f795447945fe26869c181c, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -93,7 +93,7 @@ CapsuleCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  m_Radius: 0.09337334
+  m_Radius: 0.11285448
   m_Height: 4.48
   m_Direction: 2
-  m_Center: {x: -0.046698727, y: -0.06213714, z: -8.6239643e-16}
+  m_Center: {x: 0.009868229, y: -0.14164813, z: -2.959279e-15}
