@@ -13,14 +13,21 @@ public class terrain_generator : MonoBehaviour
     //T stands for terrain, intelligent i know.
 
     private TerrainData t_data;
+    public Transform house_parent;
+    public Transform nature_stuff;
 
     private void Awake()
     {
         t_data = t.terrainData;
+
+        EditTerrain();
+        foreach(Transform child in house_parent)
+        {
+            child.GetComponent<house_generator>().Remove_shit_from_house();
+        }
     }
     void Start()
     {
-        EditTerrain();
     }
 
 
@@ -58,36 +65,38 @@ public class terrain_generator : MonoBehaviour
         //very important !! for some reason x and y are swapped in game, deal with it fucko x goes up and y goes right
         float input_mean = 1f;
         float[,,] map = new float[t_data.alphamapWidth, t_data.alphamapHeight, 8];
+        //print(t_data.alphamapHeight);
+        //print(t_data.alphamapWidth);
+        float height_convert = 200.0f / t_data.alphamapHeight;
+        float width_convert = 300.0f / t_data.alphamapWidth;
         for (int y = 0; y < t_data.alphamapHeight; y++)
         {
             for (int x = 0; x < t_data.alphamapWidth; x++)
             {
                 if (Random.Range(0f, 100f) <= 0.02)
                 {
-                    Vector3 position = new Vector3(x*300/ t_data.alphamapWidth, 0.1f, y*200/ t_data.alphamapHeight);
-                    //300 and 200 are the current map widths, basically i am doing this because the x and y of the terrain do not match the true x and y
-                    Instantiate(pebbles[Random.Range(0,8)], position, Quaternion.Euler(90,0, Random.Range(0f, 90f)));
+                    Vector3 position = new Vector3(x*width_convert, 0.1f, y*height_convert);
+                    Instantiate(pebbles[Random.Range(0,8)], position, Quaternion.Euler(90,0, Random.Range(0f, 90f)), nature_stuff);
                 }
                 if (Random.Range(0f, 100f) <= 11 && x % 10 == 0 && y % 10 == 0)
                 {
-                    Vector3 position = new Vector3(x * 300 / t_data.alphamapWidth, 0.1f, y * 200 / t_data.alphamapHeight);
-                    //300 and 200 are the current map widths, basically i am doing this because the x and y of the terrain do not match the true x and y
-                    Instantiate(trees[Random.Range(0, 8)], position, Quaternion.Euler(90, 0, Random.Range(0f, 90f)));
+                    Vector3 position = new Vector3(x * width_convert, 0.1f, y * height_convert);
+                    Instantiate(trees[Random.Range(0, 8)], position, Quaternion.Euler(90, 0, Random.Range(0f, 90f)), nature_stuff);
                 }
                 if (Random.Range(0f, 100f) <= 0.002f)
                 {
-                    if(x > 10 && y > 10)
+                    if(x > 10/width_convert && y > 10/height_convert  && x <  t_data.alphamapWidth - 10/width_convert && y < t_data.alphamapHeight - 10/height_convert)
                     {
-                        Vector3 position = new Vector3(x * 300 / t_data.alphamapWidth, 20f, y * 200 / t_data.alphamapHeight);
-                        Instantiate(boulders[Random.Range(0, 3)], position, Quaternion.Euler(90, 0, Random.Range(0f, 90f)));
+                        Vector3 position = new Vector3(x * width_convert, 20f, y * height_convert);
+                        Instantiate(boulders[Random.Range(0, 3)], position, Quaternion.Euler(90, 0, Random.Range(0f, 90f)), nature_stuff);
                     }
                 }
-                if (Random.Range(0f, 100f) <= 0.001f)
+                if (Random.Range(0f, 100f) <= 0.1f)
                 {
-                    if (x > 10 && y > 10)
+                    if (x > 40/width_convert && y > 40/height_convert && x < t_data.alphamapWidth - 40/width_convert  && y < t_data.alphamapHeight - 40/height_convert)
                     {
-                        Vector3 position = new Vector3(x * 300 / t_data.alphamapWidth, 20f, y * 200 / t_data.alphamapHeight);
-                        Instantiate(house, position, Quaternion.Euler(0, 0, Random.Range(0f, 90f)));
+                        Vector3 position = new Vector3(x * width_convert, 0, y * height_convert);
+                        Instantiate(house, position, Quaternion.identity, house_parent);
                     }
                 }
                 float green_value = NextGaussian(input_mean, 0.25f, 0f, 1f);

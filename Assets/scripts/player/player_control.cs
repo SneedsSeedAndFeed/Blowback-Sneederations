@@ -38,9 +38,10 @@ public class player_control : MonoBehaviour
         //print(mousePosition.z - transform.position.z);
         //print("COKC");
         transform.right = direction;
-        print(transform.rotation.eulerAngles.z);
+        //print(transform.rotation.eulerAngles.z);
         transform.rotation = Quaternion.Euler(90, 0, transform.rotation.eulerAngles.z);
     }
+
 
     void ProcessInputs()
     {
