@@ -45,3 +45,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   parent: {fileID: 5181861884339834233}
   wall: {fileID: 4788109924965914329, guid: 191299e3a22002f4b93e44c315a77a18, type: 3}
+  floor: {fileID: 8260857557115923289, guid: f48c1d8cfe1253f47a175c3b5c30e0fe, type: 3}
+  roof: {fileID: 7181516067985257843, guid: 47d9c595f4ed40646844e913628c31c7, type: 3}
+  nature_parent: {fileID: 0}
