@@ -52,6 +52,11 @@ public class player_control : MonoBehaviour
         moveDirection = new Vector3(moveX, 0 , moveY).normalized;
     }
 
+    void shot()
+    {
+
+    }
+
     void Move()
     {
         //animate movement and then move
